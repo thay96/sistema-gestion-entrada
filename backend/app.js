@@ -47,7 +47,7 @@ app.use((err, req, res, _next) => {
 async function startServer() {
   await testConnection();
   app.listen(PORT, () => {
-    console.log(`🚀  CONEQUIPOS — Sistema de Gestión de Entrada`);
+    console.log(`✅  CONEQUIPOS — Sistema de Gestión de Entrada`);
     console.log(`🌐  http://localhost:${PORT}`);
   });
 }

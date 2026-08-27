@@ -64,7 +64,7 @@ const User = {
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
     const [result] = await pool.execute(
       `INSERT INTO usuarios (nombre, usuario, password, rol) VALUES (?, ?, ?, ?)`,
-      [nombre, usuario, hash, rol || 'Operador']
+      [nombre, usuario, hash, rol || 'Recepcion']
     );
     return result.insertId;
   },

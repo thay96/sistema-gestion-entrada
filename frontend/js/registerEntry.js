@@ -8,20 +8,19 @@
 let lookupTimeout = null;
 
 // Referencias DOM
-const entryForm            = document.getElementById('entryForm');
-const documentoInput       = document.getElementById('entryDocumento');
-const nombreInput          = document.getElementById('entryNombre');
-const empresaInput         = document.getElementById('entryEmpresa');
-const tipoPersonaSelect    = document.getElementById('entryTipoPersona');
-const correoInput          = document.getElementById('entryCorreo');
-const telefonoInput        = document.getElementById('entryTelefono');
-const personaVisitaInput   = document.getElementById('entryPersonaVisita');
-const motivoTextarea       = document.getElementById('entryMotivo');
-const frequentBanner       = document.getElementById('frequentVisitorBanner');
-const lookupSpinner        = document.getElementById('lookupSpinner');
-const entryTimeDisplay     = document.getElementById('entryTimeDisplay');
-const btnClearEntry        = document.getElementById('btnClearEntry');
-const btnSubmitEntry       = document.getElementById('btnSubmitEntry');
+const entryForm = document.getElementById('entryForm');
+const documentoInput = document.getElementById('entryDocumento');
+const nombreInput = document.getElementById('entryNombre');
+const empresaInput = document.getElementById('entryEmpresa');
+const tipoPersonaSelect = document.getElementById('entryTipoPersona');
+const correoInput = document.getElementById('entryCorreo');
+const telefonoInput = document.getElementById('entryTelefono');
+const motivoTextarea = document.getElementById('entryMotivo');
+const frequentBanner = document.getElementById('frequentVisitorBanner');
+const lookupSpinner = document.getElementById('lookupSpinner');
+const entryTimeDisplay = document.getElementById('entryTimeDisplay');
+const btnClearEntry = document.getElementById('btnClearEntry');
+const btnSubmitEntry = document.getElementById('btnSubmitEntry');
 
 let entryClockInterval = null;
 
@@ -70,14 +69,13 @@ documentoInput.addEventListener('input', () => {
 
       if (data.found && data.visitor) {
         const v = data.visitor;
-        nombreInput.value            = v.nombre;
-        empresaInput.value           = v.empresa;
-        tipoPersonaSelect.value      = v.tipo_persona;
-        correoInput.value            = v.correo;
-        telefonoInput.value          = v.telefono || '';
+        nombreInput.value = v.nombre;
+        empresaInput.value = v.empresa;
+        tipoPersonaSelect.value = v.tipo_persona;
+        correoInput.value = v.correo;
+        telefonoInput.value = v.telefono || '';
         frequentBanner.style.display = 'flex';
-        // Enfocar el campo "persona que visita" para agilizar el flujo
-        personaVisitaInput.focus();
+
       } else {
         frequentBanner.style.display = 'none';
       }
@@ -97,23 +95,22 @@ entryForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const payload = {
-    documento:      documentoInput.value.trim(),
-    nombre:         nombreInput.value.trim(),
-    empresa:        empresaInput.value.trim(),
-    tipo_persona:   tipoPersonaSelect.value,
-    correo:         correoInput.value.trim(),
-    telefono:       telefonoInput.value.trim(),
-    persona_visita: personaVisitaInput.value.trim(),
-    motivo:         motivoTextarea.value.trim(),
+    documento: documentoInput.value.trim(),
+    nombre: nombreInput.value.trim(),
+    empresa: empresaInput.value.trim(),
+    tipo_persona: tipoPersonaSelect.value,
+    correo: correoInput.value.trim(),
+    telefono: telefonoInput.value.trim(),
+    motivo: motivoTextarea.value.trim(),
   };
 
   // Validación front-end
   const requiredLabels = {
-    documento:    'Número de documento',
-    nombre:       'Nombre completo',
-    empresa:      'Empresa',
+    documento: 'Número de documento',
+    nombre: 'Nombre completo',
+    empresa: 'Empresa',
     tipo_persona: 'Tipo de persona',
-    correo:       'Correo electrónico',
+    correo: 'Correo electrónico',
   };
   for (const [key, label] of Object.entries(requiredLabels)) {
     if (!payload[key]) {
@@ -159,4 +156,4 @@ btnClearEntry.addEventListener('click', clearEntryForm);
 
 // Exponer
 window.startEntryFormClock = startEntryFormClock;
-window.stopEntryFormClock  = stopEntryFormClock;
+window.stopEntryFormClock = stopEntryFormClock;

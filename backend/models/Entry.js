@@ -14,11 +14,11 @@ const Entry = {
    * @returns {number} ID del registro creado
    */
   async create(data) {
-    const { visitante_id, persona_visita, motivo } = data;
+    const { visitante_id, motivo } = data;
     const [result] = await pool.execute(
-      `INSERT INTO ingresos (visitante_id, persona_visita, motivo)
-       VALUES (?, ?, ?)`,
-      [visitante_id, persona_visita || null, motivo || null],
+      `INSERT INTO ingresos (visitante_id, motivo)
+   VALUES (?, ?)`,
+      [visitante_id, motivo || null]
     );
     return result.insertId;
   },
@@ -130,7 +130,6 @@ const Entry = {
         v.nombre,
         v.empresa,
         v.tipo_persona,
-        i.persona_visita,
         i.motivo,
         i.hora_entrada,
         i.hora_salida,

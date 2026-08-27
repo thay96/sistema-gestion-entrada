@@ -35,7 +35,7 @@ function openCreateUser() {
   document.getElementById('modalUserTitle').textContent = 'Crear Usuario';
   document.getElementById('userFormNombre').value = '';
   document.getElementById('userFormUsuario').value = '';
-  document.getElementById('userFormRol').value = 'Operador';
+  document.getElementById('userFormRol').value = 'Recepcion';
   document.getElementById('userFormPassword').value = '';
   document.getElementById('userPasswordGroup').style.display = 'block';
   document.getElementById('modalUser').classList.remove('hidden');

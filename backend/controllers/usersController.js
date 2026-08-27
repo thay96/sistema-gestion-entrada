@@ -38,7 +38,7 @@ const usersController = {
         nombre:   nombre.trim(),
         usuario:  usuario.trim().toLowerCase(),
         password,
-        rol:      ['Administrador','Operador'].includes(rol) ? rol : 'Operador',
+        rol:      ['Administrador','Recepcion'].includes(rol) ? rol : 'Recepcion',
       });
 
       return res.status(201).json({ success: true, message: 'Usuario creado exitosamente.', id });
@@ -66,7 +66,7 @@ const usersController = {
       await User.update(parseInt(id), {
         nombre:  nombre.trim(),
         usuario: usuario.trim().toLowerCase(),
-        rol:     ['Administrador','Operador'].includes(rol) ? rol : 'Operador',
+        rol:     ['Administrador','Recepcion'].includes(rol) ? rol : 'Recepcion',
         activo:  activo !== undefined ? activo : 1,
       });
 

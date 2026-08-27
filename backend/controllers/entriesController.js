@@ -18,7 +18,6 @@ const entriesController = {
         documento,
         empresa,
         tipo_persona,
-        persona_visita,
         motivo,
         telefono,
         correo,
@@ -53,7 +52,6 @@ const entriesController = {
 
       const ingresoId = await Entry.create({
         visitante_id,
-        persona_visita: persona_visita ? persona_visita.trim() : null,
         motivo: motivo ? motivo.trim() : null,
       });
 
@@ -149,7 +147,6 @@ const entriesController = {
         Nombre: r.nombre,
         Empresa: r.empresa,
         Tipo: r.tipo_persona,
-        "Persona Visita": r.persona_visita || "",
         Motivo: r.motivo || "",
         "Hora Entrada": r.hora_entrada
           ? moment(r.hora_entrada).format("DD/MM/YYYY HH:mm:ss")

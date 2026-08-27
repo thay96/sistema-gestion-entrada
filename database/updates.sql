@@ -51,3 +51,19 @@ VALUES (
   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMqJqhNhjwd.1FCZdMp/HoJIfy',
   'Administrador'
 );
+
+
+
+
+
+-- ============================================================
+-- Cambio de rol: 'Operador' -> 'Recepcion'
+-- Ejecutado manualmente el 2026-08-25
+-- ============================================================
+ALTER TABLE usuarios 
+MODIFY COLUMN rol ENUM('Administrador','Operador','Recepcion') NOT NULL DEFAULT 'Recepcion';
+
+UPDATE usuarios SET rol = 'Recepcion' WHERE rol = 'Operador';
+
+ALTER TABLE usuarios 
+MODIFY COLUMN rol ENUM('Administrador','Recepcion') NOT NULL DEFAULT 'Recepcion';

@@ -9,16 +9,16 @@ input,select,textarea{font-family:var(--font)}
 /* ── LOGIN ─────────────────────────────────────── */
 #loginPage{position:fixed;inset:0;background:var(--bg-base);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0}
 .login-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 44px;width:100%;max-width:420px;box-shadow:var(--shadow-md)}
-.login-brand{text-align:center;margin-bottom:32px}
-.login-brand-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}
+.login-brand{text-align:center;margin-bottom:6px}
+.login-brand-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:0}
 .login-brand-logo svg{color:var(--accent)}
 .login-brand-name{font-size:1.7rem;font-weight:800;color:var(--accent);letter-spacing:-.02em}
-.login-brand-sub{font-size:.8rem;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase}
-.login-title{font-size:1rem;font-weight:600;color:var(--text-primary);margin-bottom:20px;text-align:center}
+.login-brand-sub{font-size:.85rem;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.login-title{font-size:1.3rem;font-weight:500;color:var(--text-primary);margin-bottom:20px;text-align:center;margin-top:0}
 .login-error{display:none;background:var(--red-bg);border:1px solid rgba(217,48,37,.25);color:var(--red);border-radius:var(--radius-sm);padding:10px 14px;font-size:.85rem;margin-bottom:16px;align-items:center;gap:8px}
 .login-error.show{display:flex}
 #loginForm .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
-#loginForm label{font-size:.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+#loginForm label{font-size:.75rem;font-weight:800;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
 #loginForm input{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:.95rem;padding:11px 14px;width:100%;outline:none;transition:var(--transition)}
 #loginForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
 .btn-login{width:100%;padding:13px;background:var(--accent);color:#fff;font-weight:700;font-size:.95rem;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
