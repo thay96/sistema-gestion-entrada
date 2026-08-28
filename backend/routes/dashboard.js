@@ -6,7 +6,7 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = Router();
 
-// Dashboard solo para Administrador
-router.get('/', requireAuth, requireAdmin, dashboardController.getStats);
+// Dashboard: accesible para cualquier usuario autenticado (Admin y Recepcion)
+router.get('/', requireAuth, dashboardController.getStats);
 
 module.exports = router;

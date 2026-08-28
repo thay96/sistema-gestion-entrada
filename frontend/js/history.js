@@ -35,8 +35,14 @@ async function loadHistory() {
   } finally {
     setLoading(false);
   }
-}
 
+  try {
+    const dashData = await apiFetch('/dashboard');
+    if (dashData.horasPico) renderPeakHoursChart(dashData.horasPico, 'peakHoursChartHistory');
+  } catch (_) {
+    // Si falla, simplemente no se dibuja la gráfica, sin interrumpir el resto del historial
+  }
+}
 /**
  * Renderiza la tabla de historial.
  */
@@ -178,4 +184,54 @@ historySearch.addEventListener('keydown', (e) => {
 });
 
 // Exponer
+const btnEvacuation = document.getElementById('btnEvacuation');
+
+/**
+ * Genera y muestra la lista de evacuación (quiénes están dentro ahora mismo).
+ * La lista queda "congelada" en el momento del clic: no se actualiza sola después.
+ */
+async function showEvacuationList() {
+  setLoading(true);
+  try {
+    const data = await apiFetch('/entries/evacuation');
+    renderEvacuationModal(data.records, data.generatedAt);
+  } catch (err) {
+    showToast(err.message || 'Error al generar la lista de evacuación.', 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderEvacuationModal(records, generatedAt) {
+  const timestampEl = document.getElementById('evacuationTimestamp');
+  const tbody       = document.getElementById('evacuationTableBody');
+
+  const fecha = new Date(generatedAt);
+  const fechaTexto = fecha.toLocaleString('es-CO', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  });
+
+  timestampEl.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>${records.length}</strong> persona${records.length !== 1 ? 's' : ''} dentro al momento de generar esta lista — <strong>${fechaTexto}</strong></span>
+  `;
+
+  if (!records.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="4">No hay nadie registrado como "Dentro" en este momento.</td></tr>`;
+  } else {
+    tbody.innerHTML = records.map(r => `
+      <tr>
+        <td><code>${escapeHtml(r.documento)}</code></td>
+        <td><strong>${escapeHtml(r.nombre)}</strong></td>
+        <td>${escapeHtml(r.empresa)}</td>
+        <td style="white-space:nowrap;">${formatTime(r.hora_entrada)}</td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('modalEvacuation').classList.remove('hidden');
+}
+
+btnEvacuation.addEventListener('click', showEvacuationList);
+
 window.loadHistory = loadHistory;

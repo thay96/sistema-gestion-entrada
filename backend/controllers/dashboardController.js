@@ -42,22 +42,39 @@ const dashboardController = {
         WHERE DATE(i.hora_entrada) = CURDATE()
         ORDER BY i.hora_entrada DESC
       `);
-
+      // Entradas agrupadas por hora, para la gráfica de horas pico (7am - 10pm)
+      const [hourlyRows] = await pool.execute(`
+        SELECT HOUR(i.hora_entrada) AS hora, COUNT(*) AS cantidad
+        FROM ingresos i
+        WHERE DATE(i.hora_entrada) = CURDATE()
+          AND HOUR(i.hora_entrada) BETWEEN 7 AND 22
+        GROUP BY HOUR(i.hora_entrada)
+      `);
+            const horasPico = [];
+      for (let h = 7; h <= 22; h++) {
+        const found = hourlyRows.find(r => r.hora === h);
+        horasPico.push({
+          hora: h,
+          cantidad: found ? Number(found.cantidad) : 0,
+        });
+      }
+      
       const s = statsRows[0];
 
       return res.json({
         success: true,
         stats: {
-          dentro:          Number(s.dentro)          || 0,
-          salidos:         Number(s.salidos)         || 0,
-          total_ingresos:  Number(s.total_ingresos)  || 0,
-          total_salidas:   Number(s.total_salidas)   || 0,
-          total_empresas:  Number(s.total_empresas)  || 0,
-          proveedores:     Number(s.proveedores)     || 0,
-          clientes:        Number(s.clientes)        || 0,
+          dentro: Number(s.dentro) || 0,
+          salidos: Number(s.salidos) || 0,
+          total_ingresos: Number(s.total_ingresos) || 0,
+          total_salidas: Number(s.total_salidas) || 0,
+          total_empresas: Number(s.total_empresas) || 0,
+          proveedores: Number(s.proveedores) || 0,
+          clientes: Number(s.clientes) || 0,
           visitantes_tipo: Number(s.visitantes_tipo) || 0,
         },
         records,
+        horasPico,
       });
     } catch (err) {
       console.error('[dashboardController.getStats]', err);

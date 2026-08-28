@@ -112,6 +112,20 @@ const entriesController = {
         .json({ success: false, message: "Error interno del servidor." });
     }
   },
+  /** GET /api/entries/evacuation — Lista para el Botón de Evacuación */
+  async getEvacuationList(req, res) {
+    try {
+      const records = await Entry.findAllActive();
+      return res.json({
+        success: true,
+        generatedAt: new Date().toISOString(),
+        records,
+      });
+    } catch (err) {
+      console.error('[entriesController.getEvacuationList]', err);
+      return res.status(500).json({ success: false, message: 'Error interno del servidor.' });
+    }
+  },
 
   /** GET /api/entries/history — Historial con filtros */
   async getHistory(req, res) {

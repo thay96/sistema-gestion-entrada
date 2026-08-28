@@ -14,6 +14,7 @@ router.use(requireAuth);
 router.get("/active", entriesController.getActive);
 router.get("/history", entriesController.getHistory);
 router.get("/export", entriesController.exportToExcel);
+router.get("/evacuation", entriesController.getEvacuationList);
 
 // Eliminar registro → solo Administrador
 router.delete("/:id", requireAdmin, entriesController.deleteEntry);
