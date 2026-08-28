@@ -10,6 +10,26 @@ const loginForm    = document.getElementById('loginForm');
 const loginError   = document.getElementById('loginError');
 const loginBtn     = document.getElementById('btnLogin');
 
+const btnMobileMenu   = document.getElementById('btnMobileMenu');
+const sidebarEl       = document.querySelector('.sidebar');
+const sidebarOverlay  = document.getElementById('sidebarOverlay');
+
+function toggleMobileSidebar() {
+  sidebarEl.classList.toggle('open');
+  sidebarOverlay.classList.toggle('open');
+}
+
+btnMobileMenu.addEventListener('click', toggleMobileSidebar);
+sidebarOverlay.addEventListener('click', toggleMobileSidebar);
+
+// Cierra el menú automáticamente al elegir una página (mejor experiencia en celular)
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    sidebarEl.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+  });
+});
+
 loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   loginError.classList.remove('show');
