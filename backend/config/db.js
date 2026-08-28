@@ -13,12 +13,15 @@ const pool = mysql.createPool({
   port:               parseInt(process.env.DB_PORT) || 3306,
   user:               process.env.DB_USER     || 'root',
   password:           process.env.DB_PASSWORD || '',
-  database:           process.env.DB_NAME     || 'gestion_entrada',
+  database:           process.env.DB_NAME     || 'defaultdb',
   charset:            'utf8mb4',
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
   timezone:           'local',
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 /**
