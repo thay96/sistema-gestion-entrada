@@ -49,6 +49,15 @@ const entriesController = {
         telefono: telefono ? telefono.trim() : null,
         correo: correo.trim(),
       });
+      
+        // Verificar que la persona no tenga ya un ingreso activo (Dentro)
+      const activeEntry = await Entry.findActiveByVisitorId(visitante_id);
+      if (activeEntry) {
+        return res.status(409).json({
+          success: false,
+          message: 'Esta persona ya se encuentra dentro de las instalaciones. Debe registrar su salida antes de un nuevo ingreso.',
+        });
+      }
 
       const ingresoId = await Entry.create({
         visitante_id,

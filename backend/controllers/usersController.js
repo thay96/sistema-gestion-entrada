@@ -35,10 +35,10 @@ const usersController = {
       }
 
       const id = await User.create({
-        nombre:   nombre.trim(),
-        usuario:  usuario.trim().toLowerCase(),
+        nombre: nombre.trim(),
+        usuario: usuario.trim().toLowerCase(),
         password,
-        rol:      ['Administrador','Recepcion'].includes(rol) ? rol : 'Recepcion',
+        rol: ['Administrador', 'Recepcion'].includes(rol) ? rol : 'Recepcion',
       });
 
       return res.status(201).json({ success: true, message: 'Usuario creado exitosamente.', id });
@@ -51,7 +51,7 @@ const usersController = {
   /** PUT /api/users/:id — Actualizar datos del usuario */
   async update(req, res) {
     try {
-      const { id }                  = req.params;
+      const { id } = req.params;
       const { nombre, usuario, rol, activo } = req.body;
 
       if (!nombre || !usuario) {
@@ -63,11 +63,26 @@ const usersController = {
         return res.status(409).json({ success: false, message: 'Ese nombre de usuario ya está en uso.' });
       }
 
+      const nuevoRol = ['Administrador', 'Recepcion'].includes(rol) ? rol : 'Recepcion';
+      const nuevoActivo = activo !== undefined ? activo : 1;
+
+      // Evitar quedarse sin ningún Administrador activo en el sistema
+      const dejaDeSerAdminActivo = nuevoRol !== 'Administrador' || Number(nuevoActivo) === 0;
+      if (dejaDeSerAdminActivo) {
+        const otrosAdmins = await User.countActiveAdmins(parseInt(id));
+        if (otrosAdmins === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'No puedes hacer este cambio: eres el único Administrador activo. Crea otro Administrador antes de continuar.',
+          });
+        }
+      }
+
       await User.update(parseInt(id), {
-        nombre:  nombre.trim(),
+        nombre: nombre.trim(),
         usuario: usuario.trim().toLowerCase(),
-        rol:     ['Administrador','Recepcion'].includes(rol) ? rol : 'Recepcion',
-        activo:  activo !== undefined ? activo : 1,
+        rol: nuevoRol,
+        activo: nuevoActivo,
       });
 
       return res.json({ success: true, message: 'Usuario actualizado exitosamente.' });
@@ -80,7 +95,7 @@ const usersController = {
   /** PUT /api/users/:id/password — Cambiar contraseña */
   async changePassword(req, res) {
     try {
-      const { id }          = req.params;
+      const { id } = req.params;
       const { newPassword } = req.body;
 
       if (!newPassword || newPassword.length < 6) {

@@ -110,6 +110,19 @@ const User = {
     const [rows] = await pool.execute(sql, params);
     return rows.length > 0;
   },
+    /**
+   * Cuenta cuántos usuarios con rol Administrador y activos existen,
+   * opcionalmente excluyendo un ID (útil al validar una edición).
+   * @param {number|null} excludeId
+   * @returns {number}
+   */
+  async countActiveAdmins(excludeId = null) {
+    let sql = `SELECT COUNT(*) AS total FROM usuarios WHERE rol = 'Administrador' AND activo = 1`;
+    const params = [];
+    if (excludeId) { sql += ' AND id != ?'; params.push(excludeId); }
+    const [rows] = await pool.execute(sql, params);
+    return rows[0].total;
+  },
 };
 
 module.exports = User;

@@ -74,6 +74,20 @@ const Entry = {
     return rows;
   },
 
+    /**
+   * Verifica si un visitante ya tiene un ingreso activo (estado = 'Dentro').
+   * Evita que la misma persona se registre dos veces sin haber salido antes.
+   * @param {number} visitante_id
+   * @returns {Object|null}
+   */
+  async findActiveByVisitorId(visitante_id) {
+    const [rows] = await pool.execute(
+      `SELECT id FROM ingresos WHERE visitante_id = ? AND estado = 'Dentro' LIMIT 1`,
+      [visitante_id]
+    );
+    return rows[0] || null;
+  },
+  
   /**
    * Obtiene las estadísticas del día actual para el dashboard.
    * @returns {Object} { dentro, salidos, total_ingresos, total_salidas }
