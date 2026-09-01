@@ -41,24 +41,27 @@ const entriesController = {
         }
       }
 
-      const { id: visitante_id } = await Visitor.upsert({
-        nombre: nombre.trim(),
-        documento: documento.trim(),
-        empresa: empresa.trim(),
-        tipo_persona: tipo_persona.trim(),
-        telefono: telefono ? telefono.trim() : null,
-        correo: correo.trim(),
-      });
-      
-        // Verificar que la persona no tenga ya un ingreso activo (Dentro)
-      const activeEntry = await Entry.findActiveByVisitorId(visitante_id);
-      if (activeEntry) {
-        return res.status(409).json({
-          success: false,
-          message: 'Esta persona ya se encuentra dentro de las instalaciones. Debe registrar su salida antes de un nuevo ingreso.',
-        });
+      // 1. Buscar si ya existe un visitante con este documento, SIN modificar nada todavía
+      const visitanteExistente = await Visitor.findByDocumento(documento.trim());
+
+      // 2. Si existe, verificar si ya tiene un ingreso activo (Dentro)
+      if (visitanteExistente) {
+        const activeEntry = await Entry.findActiveByVisitorId(visitanteExistente.id);
+        if (activeEntry) {
+          return res.status(409).json({
+            success: false,
+            message: 'Esta persona ya se encuentra dentro de las instalaciones. Debe registrar su salida antes de un nuevo ingreso.',
+          });
+        }
       }
 
+      // 3. Solo si NO está dentro, se actualizan/crean los datos del visitante
+      const { id: visitante_id } = await Visitor.upsert({
+        nombre: nombre.trim(), documento: documento.trim(), empresa: empresa.trim(),
+        tipo_persona: tipo_persona.trim(), telefono: telefono ? telefono.trim() : null, correo: correo.trim(),
+      });
+
+      // 4. Y se registra la nueva entrada
       const ingresoId = await Entry.create({
         visitante_id,
         motivo: motivo ? motivo.trim() : null,
