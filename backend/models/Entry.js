@@ -8,17 +8,16 @@ const { pool } = require("../config/db");
  */
 const Entry = {
   /**
-   * Crea un nuevo registro de entrada.
-   * La hora de entrada se asigna automáticamente por MySQL (DEFAULT CURRENT_TIMESTAMP).
-   * @param {Object} data
+   * Crea un nuevo registro de entrada guardando el tipo_persona congelado en ese instante.
+   * @param {Object} data - { visitante_id, tipo_persona, motivo }
    * @returns {number} ID del registro creado
    */
   async create(data) {
-    const { visitante_id, motivo } = data;
+    const { visitante_id, tipo_persona, motivo } = data;
     const [result] = await pool.execute(
-      `INSERT INTO ingresos (visitante_id, motivo)
-   VALUES (?, ?)`,
-      [visitante_id, motivo || null]
+      `INSERT INTO ingresos (visitante_id, tipo_persona, motivo)
+       VALUES (?, ?, ?)`,
+      [visitante_id, tipo_persona || null, motivo || null]
     );
     return result.insertId;
   },
@@ -33,7 +32,7 @@ const Entry = {
       `UPDATE ingresos
        SET hora_salida = NOW(), estado = 'Salió'
        WHERE id = ? AND estado = 'Dentro'`,
-      [ingresoId],
+      [ingresoId]
     );
     return result.affectedRows > 0;
   },
@@ -53,7 +52,7 @@ const Entry = {
        WHERE i.estado = 'Dentro'
          AND (v.documento LIKE ? OR v.nombre LIKE ?)
        ORDER BY i.hora_entrada ASC`,
-      [like, like],
+      [like, like]
     );
     return rows;
   },
@@ -69,12 +68,12 @@ const Entry = {
        FROM ingresos i
        INNER JOIN visitantes v ON v.id = i.visitante_id
        WHERE i.estado = 'Dentro'
-       ORDER BY i.hora_entrada ASC`,
+       ORDER BY i.hora_entrada ASC`
     );
     return rows;
   },
 
-    /**
+  /**
    * Verifica si un visitante ya tiene un ingreso activo (estado = 'Dentro').
    * Evita que la misma persona se registre dos veces sin haber salido antes.
    * @param {number} visitante_id
@@ -87,7 +86,7 @@ const Entry = {
     );
     return rows[0] || null;
   },
-  
+
   /**
    * Obtiene las estadísticas del día actual para el dashboard.
    * @returns {Object} { dentro, salidos, total_ingresos, total_salidas }
@@ -100,14 +99,14 @@ const Entry = {
          COUNT(*)                AS total_ingresos,
          SUM(hora_salida IS NOT NULL) AS total_salidas
        FROM ingresos
-       WHERE DATE(hora_entrada) = CURDATE()`,
+       WHERE DATE(hora_entrada) = CURDATE()`
     );
     return rows[0];
   },
 
   /**
    * Obtiene todos los registros del día actual con datos del visitante.
-   * Usado en la tabla principal del dashboard.
+   * Lee i.tipo_persona para mantener el tipo histórico de la visita.
    * @returns {Array}
    */
   async getTodayRecords() {
@@ -116,7 +115,7 @@ const Entry = {
          i.id,
          v.nombre,
          v.empresa,
-         v.tipo_persona,
+         i.tipo_persona,
          v.documento,
          i.hora_entrada,
          i.hora_salida,
@@ -124,13 +123,14 @@ const Entry = {
        FROM ingresos i
        INNER JOIN visitantes v ON v.id = i.visitante_id
        WHERE DATE(i.hora_entrada) = CURDATE()
-       ORDER BY i.hora_entrada DESC`,
+       ORDER BY i.hora_entrada DESC`
     );
     return rows;
   },
 
   /**
    * Consulta el historial con filtros opcionales de búsqueda.
+   * Lee i.tipo_persona para mantener el tipo histórico de la visita.
    * @param {Object} filters - { query, fechaDesde, fechaHasta }
    * @returns {Array}
    */
@@ -143,7 +143,7 @@ const Entry = {
         v.documento,
         v.nombre,
         v.empresa,
-        v.tipo_persona,
+        i.tipo_persona,
         i.motivo,
         i.hora_entrada,
         i.hora_salida,

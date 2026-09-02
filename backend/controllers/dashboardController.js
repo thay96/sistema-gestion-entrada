@@ -32,7 +32,7 @@ const dashboardController = {
           i.id,
           v.nombre,
           v.empresa,
-          v.tipo_persona,
+          i.tipo_persona,
           v.documento,
           i.hora_entrada,
           i.hora_salida,

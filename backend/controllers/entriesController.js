@@ -64,6 +64,7 @@ const entriesController = {
       // 4. Y se registra la nueva entrada
       const ingresoId = await Entry.create({
         visitante_id,
+        tipo_persona: tipo_persona ? tipo_persona.trim() : null,
         motivo: motivo ? motivo.trim() : null,
       });
 
@@ -215,8 +216,8 @@ const entriesController = {
           message: "Error al generar el archivo Excel.",
         });
     }
-  },
 
+  },
   /** DELETE /api/entries/:id — Eliminar registro (solo Admin) */
   async deleteEntry(req, res) {
     try {
@@ -226,6 +227,29 @@ const entriesController = {
           .status(400)
           .json({ success: false, message: "ID de ingreso inválido." });
       }
+
+      // 1. Consultar el estado actual del ingreso antes de eliminar
+      const [rows] = await pool.execute(
+        "SELECT estado FROM ingresos WHERE id = ?",
+        [parseInt(id)]
+      );
+
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Registro no encontrado." });
+      }
+
+      // 2. Bloquear la eliminación si la persona sigue dentro
+      if (rows[0].estado === "Dentro") {
+        return res.status(409).json({
+          success: false,
+          message:
+            "No se puede eliminar un registro de un visitante que está dentro de las instalaciones. Debe registrar su salida primero.",
+        });
+      }
+
+      // 3. Si ya salió, proceder con la eliminación normal
       const [result] = await pool.execute("DELETE FROM ingresos WHERE id = ?", [
         parseInt(id),
       ]);

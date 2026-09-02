@@ -60,7 +60,7 @@ function selectFromDropdown(item) {
     documento: item.dataset.doc,
     hora_entrada: item.dataset.entrada,
   };
-  const yaExiste = activeVisitors.some((v) => v.id === card.id);
+  const yaExiste = activeVisitors.some((v) => String(v.id) === String(card.id));
   if (!yaExiste) {
     activeVisitors.push(card);
   } else {
@@ -154,5 +154,62 @@ async function loadActiveVisitors() {
     showToast(err.message || "Error al cargar visitantes activos.", "error");
   }
 }
+
+const btnExitSearch = document.getElementById("btnExitSearch");
+
+btnExitSearch.addEventListener("click", () => buscarVisitante());
+
+exitSearchInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    buscarVisitante();
+  }
+});
+
+async function buscarVisitante() {
+  const q = exitSearchInput.value.trim();
+  exitDropdown.classList.remove("open");
+
+  // Si el campo está vacío, mostrar de nuevo la lista completa de "Dentro"
+  if (q.length < 2) {
+    exitNoResults.style.display = "none";
+    loadActiveVisitors();
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const data = await apiFetch(`/visitors/search?q=${encodeURIComponent(q)}`);
+    const results = data.results || [];
+
+    // 1. Limpiar el contenedor antes de pintar los nuevos resultados
+    exitResultsList.innerHTML = "";
+
+    // 2. Filtrar por IDs únicos (por si el backend repite algo)
+    const idsVistos = new Set();
+    activeVisitors = results.filter((r) => {
+      const id = String(r.id);
+      if (idsVistos.has(id)) return false;
+      idsVistos.add(id);
+      return true;
+    });
+
+    if (activeVisitors.length) {
+      renderExitCards(activeVisitors);
+      exitSearchResults.style.display = "block";
+      exitEmptyState.style.display = "none";
+      exitNoResults.style.display = "none";
+    } else {
+      exitSearchResults.style.display = "none";
+      exitEmptyState.style.display = "none";
+      exitNoResults.style.display = "flex";
+    }
+  } catch (err) {
+    showToast(err.message || "Error al buscar visitante.", "error");
+  } finally {
+    setLoading(false);
+  }
+}
+
 
 window.resetExitPage = resetExitPage;

@@ -21,10 +21,11 @@ CREATE TABLE visitantes (
    INDEX idx_empresa   (empresa)
 ) ENGINE=InnoDB;
 
--- 4. Crear Tabla Ingresos (sin la columna persona_visita, se eliminó del sistema)
+-- 4. Crear Tabla Ingresos (Agregada la columna tipo_persona para historial exacto)
 CREATE TABLE ingresos (
    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
    visitante_id   INT UNSIGNED NOT NULL,
+   tipo_persona   VARCHAR(50)  NULL,
    motivo         TEXT         NULL,
    hora_entrada   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
    hora_salida    DATETIME     NULL,
@@ -51,14 +52,14 @@ CREATE TABLE usuarios (
    INDEX idx_activo  (activo)
 ) ENGINE=InnoDB;
 
--- 6. Crear Vista (sin persona_visita)
+-- 6. Crear Vista (Cambiado v.tipo_persona por i.tipo_persona para respetar el tipo de la entrada)
 CREATE OR REPLACE VIEW v_registros AS
 SELECT 
   i.id,
   v.documento,
   v.nombre,
   v.empresa,
-  v.tipo_persona,
+  i.tipo_persona,
   v.telefono,
   v.correo,
   i.motivo,
