@@ -281,6 +281,27 @@
                             <div class="form-group"><label>Hora de entrada</label>
                                 <div class="time-display" id="entryTimeDisplay">--:--:--</div>
                             </div>
+                            <div class="form-group form-group--full">
+                                <label>Foto del visitante <span class="optional">(opcional)</span></label>
+                                <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+                                    <div
+                                        style="border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;background:#000;width:280px;height:210px;display:flex;align-items:center;justify-content:center;">
+                                        <video id="cameraVideo" autoplay playsinline
+                                            style="width:100%;height:100%;object-fit:cover;display:block;"></video>
+                                        <img id="capturedPhotoPreview"
+                                            style="width:100%;height:100%;object-fit:cover;display:none;">
+                                    </div>
+                                    <div style="display:flex;flex-direction:column;gap:8px;">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="btnCapturePhoto">📷
+                                            Capturar foto</button>
+                                        <button type="button" class="btn btn-ghost btn-sm" id="btnRetakePhoto"
+                                            style="display:none;">Tomar otra vez</button>
+                                        <span id="cameraStatus"
+                                            style="font-size:.78rem;color:var(--text-muted);"></span>
+                                    </div>
+                                </div>
+                                <canvas id="captureCanvas" style="display:none;"></canvas>
+                            </div>
                         </div>
                         <div class="form-actions"><button type="button" class="btn btn-ghost"
                                 id="btnClearEntry">Limpiar</button><button type="submit" class="btn btn-primary btn-lg"
@@ -386,17 +407,16 @@
                     <div class="table-wrapper">
                         <table class="data-table">
                             <thead>
-                                <tr>
-                                    <th>Estado</th>
-                                    <th>Documento</th>
-                                    <th>Nombre</th>
-                                    <th>Empresa</th>
-                                    <th>Tipo</th>
-                                    <th>Motivo</th>
-                                    <th>Hora Entrada</th>
-                                    <th>Hora Salida</th>
-                                    <th data-role="admin">Acciones</th>
-                                </tr>
+                                <th>Estado</th>
+                                <th>Documento</th>
+                                <th>Nombre</th>
+                                <th>Empresa</th>
+                                <th>Tipo</th>
+                                <th>Motivo</th>
+                                <th>Foto</th>
+                                <th>Hora Entrada</th>
+                                <th>Hora Salida</th>
+                                <th data-role="admin">Acciones</th>
                             </thead>
                             <tbody id="historyTableBody">
                                 <tr class="empty-row">
@@ -586,6 +606,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/registerEntry.js"></script>

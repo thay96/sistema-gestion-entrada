@@ -69,6 +69,10 @@ function renderHistoryTable(records) {
       ? `<button class="btn btn-danger-ghost btn-sm btn-delete-history" data-id="${r.id}">Eliminar</button>`
       : '';
 
+      const fotoHtml = r.foto
+      ? `<img src="/uploads/fotos/${r.foto}" class="history-photo-thumb" data-full="/uploads/fotos/${r.foto}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;cursor:pointer;">`
+      : `<span style="color:var(--text-muted);font-size:.78rem;">Sin foto</span>`;
+
     return `
       <tr>
         <td>${statusHtml}</td>
@@ -80,6 +84,7 @@ function renderHistoryTable(records) {
             title="${r.motivo ? escapeHtml(r.motivo) : ''}">
           ${r.motivo ? escapeHtml(r.motivo) : '<span style="color:var(--text-muted)">—</span>'}
         </td>
+        <td>${fotoHtml}</td>
         <td style="white-space:nowrap;">${formatDateTime(r.hora_entrada)}</td>
         <td style="white-space:nowrap;">${r.hora_salida ? formatDateTime(r.hora_salida) : '<span style="color:var(--text-muted)">—</span>'}</td>
         ${isAdmin ? `<td>${deleteBtn}</td>` : ''}
@@ -91,6 +96,17 @@ function renderHistoryTable(records) {
       btn.addEventListener('click', () => handleDeleteHistory(btn));
     });
   }
+
+  historyTbody.querySelectorAll('.history-photo-thumb').forEach(img => {
+    img.addEventListener('click', () => showPhotoModal(img.dataset.full));
+  });
+}
+
+/**
+ * Muestra la foto de un visitante en tamaño completo, en una ventana simple.
+ */
+function showPhotoModal(url) {
+  window.open(url, '_blank', 'width=500,height=600');
 }
 
 /**

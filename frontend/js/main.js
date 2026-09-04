@@ -64,16 +64,15 @@ function navigateTo(pageId) {
   navItems.forEach(item => item.classList.toggle('active', item.dataset.page === pageId));
 
   switch (pageId) {
-    case 'dashboard':      loadDashboard(); startDashboardAutoRefresh(); stopEntryFormClock(); break;
-    case 'register-entry': stopDashboardAutoRefresh(); startEntryFormClock(); setTimeout(() => document.getElementById('entryDocumento').focus(), 80); break;
-    case 'register-exit':  stopDashboardAutoRefresh(); stopEntryFormClock(); resetExitPage(); setTimeout(() => document.getElementById('exitSearchInput').focus(), 80); break;
-    case 'history':        stopDashboardAutoRefresh(); stopEntryFormClock(); loadHistory(); break;
-    case 'settings':       stopDashboardAutoRefresh(); stopEntryFormClock(); loadUsers(); break;
+    case 'dashboard':      loadDashboard(); startDashboardAutoRefresh(); stopEntryFormClock(); stopCamera(); break;
+    case 'register-entry': stopDashboardAutoRefresh(); startEntryFormClock(); startCamera(); setTimeout(() => document.getElementById('entryDocumento').focus(), 80); break;
+    case 'register-exit':  stopDashboardAutoRefresh(); stopEntryFormClock(); stopCamera(); resetExitPage(); setTimeout(() => document.getElementById('exitSearchInput').focus(), 80); break;
+    case 'history':        stopDashboardAutoRefresh(); stopEntryFormClock(); stopCamera(); loadHistory(); break;
+    case 'settings':       stopDashboardAutoRefresh(); stopEntryFormClock(); stopCamera(); loadUsers(); break;
   }
 }
-
 navItems.forEach(item => item.addEventListener('click', e => { e.preventDefault(); navigateTo(item.dataset.page); }));
-document.getElementById('btnLogout').addEventListener('click', () => { stopDashboardAutoRefresh(); stopEntryFormClock(); logout(); });
+document.getElementById('btnLogout').addEventListener('click', () => { stopDashboardAutoRefresh(); stopEntryFormClock(); stopCamera(); logout(); });
 
 // ── Role-based menu ──────────────────────────────────────
 function applyRoleMenu(user) {

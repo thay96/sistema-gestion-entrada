@@ -21,6 +21,30 @@ const lookupSpinner = document.getElementById('lookupSpinner');
 const entryTimeDisplay = document.getElementById('entryTimeDisplay');
 const btnClearEntry = document.getElementById('btnClearEntry');
 const btnSubmitEntry = document.getElementById('btnSubmitEntry');
+const cameraVideo = document.getElementById('cameraVideo');
+const capturedPhotoPreview = document.getElementById('capturedPhotoPreview');
+const btnCapturePhoto = document.getElementById('btnCapturePhoto');
+const btnRetakePhoto = document.getElementById('btnRetakePhoto');
+const cameraStatus = document.getElementById('cameraStatus');
+const captureCanvas = document.getElementById('captureCanvas');
+
+let cameraStream = null;
+let capturedPhotoBlob = null;
+
+// ── Conexión con el servidor para recibir datos del lector de cédulas ──
+const socket = io();
+
+socket.on('cedula-detectada', (datos) => {
+  console.log('🪪 Cédula recibida del lector:', datos);
+
+  documentoInput.value = datos.documento;
+  nombreInput.value    = datos.nombreCompleto;
+
+  showToast(`Cédula escaneada: ${datos.nombreCompleto}`, 'success');
+
+  // Dispara la búsqueda de visitante frecuente, por si ya existe en el sistema
+  documentoInput.dispatchEvent(new Event('input'));
+});
 
 let entryClockInterval = null;
 
@@ -47,6 +71,72 @@ function stopEntryFormClock() {
     entryClockInterval = null;
   }
 }
+
+/**
+ * Solicita permiso y activa la cámara, mostrando el video en vivo.
+ */
+async function startCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    cameraVideo.srcObject = cameraStream;
+    cameraStatus.textContent = '';
+  } catch (err) {
+    cameraStatus.textContent = 'Cámara no disponible. Puede registrar la entrada sin foto.';
+    console.warn('No se pudo acceder a la cámara:', err);
+  }
+}
+
+/**
+ * Apaga la cámara (libera el dispositivo para que otras apps puedan usarla).
+ */
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+}
+
+/**
+ * Toma una "foto" del cuadro actual del video, usando el canvas oculto como intermediario.
+ */
+function capturePhoto() {
+  const width = cameraVideo.videoWidth;
+  const height = cameraVideo.videoHeight;
+  captureCanvas.width = width;
+  captureCanvas.height = height;
+
+  const ctx = captureCanvas.getContext('2d');
+  ctx.drawImage(cameraVideo, 0, 0, width, height);
+
+  captureCanvas.toBlob((blob) => {
+    capturedPhotoBlob = blob;
+    const previewUrl = URL.createObjectURL(blob);
+    capturedPhotoPreview.src = previewUrl;
+
+    // Mostrar la foto capturada, ocultar el video en vivo
+    capturedPhotoPreview.style.display = 'block';
+    cameraVideo.style.display = 'none';
+    btnCapturePhoto.style.display = 'none';
+    btnRetakePhoto.style.display = 'inline-flex';
+
+    stopCamera(); // Ya no necesitamos la cámara encendida mientras se ve la foto capturada
+  }, 'image/jpeg', 0.85);
+}
+
+/**
+ * Vuelve a activar la cámara para tomar otra foto.
+ */
+async function retakePhoto() {
+  capturedPhotoBlob = null;
+  capturedPhotoPreview.style.display = 'none';
+  cameraVideo.style.display = 'block';
+  btnCapturePhoto.style.display = 'inline-flex';
+  btnRetakePhoto.style.display = 'none';
+  await startCamera();
+}
+
+btnCapturePhoto.addEventListener('click', capturePhoto);
+btnRetakePhoto.addEventListener('click', retakePhoto);
 
 /**
  * Auto-completado: cuando el empleado escribe el documento,
@@ -91,6 +181,7 @@ documentoInput.addEventListener('input', () => {
 /**
  * Envío del formulario de entrada.
  */
+
 entryForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -119,14 +210,25 @@ entryForm.addEventListener('submit', async (e) => {
     }
   }
 
+  // Armar el FormData (texto + foto, si existe)
+  const formData = new FormData();
+  Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
+  if (capturedPhotoBlob) {
+    formData.append('foto', capturedPhotoBlob, 'foto.jpg');
+  }
+
   btnSubmitEntry.disabled = true;
   setLoading(true);
 
   try {
-    await apiFetch('/entries', {
+    const token = localStorage.getItem('coneq_token');
+    const res = await fetch('/api/entries', {
       method: 'POST',
-      body: JSON.stringify(payload),
+      headers: { 'Authorization': `Bearer ${token}` }, // Sin Content-Type: el navegador lo pone solo con FormData
+      body: formData,
     });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Error al registrar la entrada.');
 
     showToast('✅  Entrada registrada correctamente.', 'success');
     clearEntryForm();
@@ -146,10 +248,19 @@ entryForm.addEventListener('submit', async (e) => {
 /**
  * Limpia todos los campos del formulario.
  */
+
 function clearEntryForm() {
   entryForm.reset();
   frequentBanner.style.display = 'none';
   documentoInput.focus();
+
+  // Reiniciar la cámara para la siguiente persona
+  capturedPhotoBlob = null;
+  capturedPhotoPreview.style.display = 'none';
+  cameraVideo.style.display = 'block';
+  btnCapturePhoto.style.display = 'inline-flex';
+  btnRetakePhoto.style.display = 'none';
+  startCamera();
 }
 
 btnClearEntry.addEventListener('click', clearEntryForm);
@@ -157,3 +268,5 @@ btnClearEntry.addEventListener('click', clearEntryForm);
 // Exponer
 window.startEntryFormClock = startEntryFormClock;
 window.stopEntryFormClock = stopEntryFormClock;
+window.startCamera = startCamera;
+window.stopCamera = stopCamera;

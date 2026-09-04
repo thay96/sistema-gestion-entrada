@@ -3,6 +3,7 @@
 const { Router } = require("express");
 const entriesController = require("../controllers/entriesController");
 const { requireAuth, requireAdmin } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
 const router = Router();
 
@@ -20,7 +21,7 @@ router.get("/evacuation", entriesController.getEvacuationList);
 router.delete("/:id", requireAdmin, entriesController.deleteEntry);
 
 // Registrar entrada y salida → cualquier usuario autenticado
-router.post("/", entriesController.registerEntry);
+router.post("/", upload.single('foto'), entriesController.registerEntry);
 router.put("/:id/exit", entriesController.registerExit);
 
 module.exports = router;

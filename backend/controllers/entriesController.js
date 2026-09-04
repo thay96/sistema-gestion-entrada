@@ -62,10 +62,13 @@ const entriesController = {
       });
 
       // 4. Y se registra la nueva entrada
+      const foto = req.file ? req.file.filename : null;
+
       const ingresoId = await Entry.create({
         visitante_id,
-        tipo_persona: tipo_persona ? tipo_persona.trim() : null,
+        tipo_persona: tipo_persona.trim(),
         motivo: motivo ? motivo.trim() : null,
+        foto,
       });
 
       return res
