@@ -21,12 +21,13 @@ CREATE TABLE visitantes (
    INDEX idx_empresa   (empresa)
 ) ENGINE=InnoDB;
 
--- 4. Crear Tabla Ingresos (Agregada la columna tipo_persona para historial exacto)
+-- 4. Crear Tabla Ingresos (con tipo_persona congelado y foto opcional)
 CREATE TABLE ingresos (
    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
    visitante_id   INT UNSIGNED NOT NULL,
-   tipo_persona   VARCHAR(50)  NULL,
+   tipo_persona   ENUM('Cliente','Visitante','Proveedor') NULL,
    motivo         TEXT         NULL,
+   foto           VARCHAR(255) NULL,
    hora_entrada   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
    hora_salida    DATETIME     NULL,
    estado         ENUM('Dentro','Salió') NOT NULL DEFAULT 'Dentro',
@@ -63,6 +64,7 @@ SELECT
   v.telefono,
   v.correo,
   i.motivo,
+  i.foto,
   i.hora_entrada,
   i.hora_salida,
   i.estado,
