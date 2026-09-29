@@ -38,13 +38,14 @@ socket.on('cedula-detectada', (datos) => {
   console.log('🪪 Cédula recibida del lector:', datos);
 
   documentoInput.value = datos.documento;
-  nombreInput.value    = datos.nombreCompleto;
+  nombreInput.value = `${datos.primerApellido || ''} ${datos.segundoApellido || ''} ${datos.nombres || ''} ${datos.segundoNombre || ''}`.replace(/\s+/g, ' ').trim();
 
-  showToast(`Cédula escaneada: ${datos.nombreCompleto}`, 'success');
+  showToast(`Cédula escaneada: ${nombreInput.value}`, 'success');
 
   // Dispara la búsqueda de visitante frecuente, por si ya existe en el sistema
   documentoInput.dispatchEvent(new Event('input'));
 });
+
 
 let entryClockInterval = null;
 
