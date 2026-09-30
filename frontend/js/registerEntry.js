@@ -2,12 +2,10 @@
 
 /* ─────────────────────────────────────────────────────────
    registerEntry.js — Lógica de Registrar Entrada
-   Incluye auto-completado para visitantes frecuentes
 ───────────────────────────────────────────────────────── */
 
 let lookupTimeout = null;
 
-// Referencias DOM
 const entryForm = document.getElementById("entryForm");
 const documentoInput = document.getElementById("entryDocumento");
 const nombreInput = document.getElementById("entryNombre");
@@ -28,100 +26,117 @@ const btnRetakePhoto = document.getElementById("btnRetakePhoto");
 const cameraStatus = document.getElementById("cameraStatus");
 const captureCanvas = document.getElementById("captureCanvas");
 
-// ── Captura de escaneo de cédula (lector Zebra en modo teclado) ──
-let scanBuffer = "";
+// ── Detección de escaneo Zebra DS46 ──
+const MODIFIER_KEYS = new Set([
+  "Shift", "Control", "Alt", "Meta", "CapsLock",
+  "AltGraph", "Fn", "FnLock", "Hyper", "Super", "Symbol", "SymbolLock",
+]);
+
+// Throttle de avisos (evita que se apilen los toasts)
+let ultimoAvisoEscaneo = 0;
+const THROTTLE_AVISO_MS = 2500;
+
+let keyLog = [];
 let scanTimer = null;
-let lastKeyTime = 0;
-let escaneoEnCurso = false;
-let focoAlIniciarEscaneo = null;
+let rafagaActiva = false;
+let descartarRafaga = false;  // ⬅️ NUEVO: sabemos que es escáner pero no procesamos
 
-const UMBRAL_VELOCIDAD_ESCANER_MS = 25;
+const PAUSA_FIN_ESCANEO_MS = 250;
+const MIN_TECLAS_ESCANEO = 15;
+const UMBRAL_DURACION_ESCANEO_MS = 1500;
+const UMBRAL_RAFAGA_MS = 25;
+const MIN_RAFAGA_CONSECUTIVA = 5;
 
-entryForm.addEventListener("keydown", (e) => {
-  const ahora = Date.now();
-  const tiempoDesdeUltimaTecla = ahora - lastKeyTime;
-  lastKeyTime = ahora;
+document.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  if (MODIFIER_KEYS.has(e.key)) return;
 
-  if (tiempoDesdeUltimaTecla < UMBRAL_VELOCIDAD_ESCANER_MS) {
-    if (!escaneoEnCurso) {
-      // Justo detectamos el inicio del escaneo. Guardamos dónde estaba el
-      // cursor y limpiamos el único carácter que alcanzó a colarse ahí.
-      focoAlIniciarEscaneo = document.activeElement;
-      if (focoAlIniciarEscaneo && "value" in focoAlIniciarEscaneo) {
-        focoAlIniciarEscaneo.value = "";
+  const ahora = performance.now();
+  keyLog.push({ key: e.key, time: ahora });
+
+  // Detección de ráfaga de máquina
+  if (!rafagaActiva && keyLog.length >= MIN_RAFAGA_CONSECUTIVA) {
+    const ultimas = keyLog.slice(-MIN_RAFAGA_CONSECUTIVA);
+    let consecutivasRapidas = 0;
+    for (let i = 1; i < ultimas.length; i++) {
+      if (ultimas[i].time - ultimas[i - 1].time < UMBRAL_RAFAGA_MS) {
+        consecutivasRapidas++;
       }
     }
-    escaneoEnCurso = true;
-  }
+    if (consecutivasRapidas >= MIN_RAFAGA_CONSECUTIVA - 1) {
+      rafagaActiva = true;
 
-  if (escaneoEnCurso) {
-    e.preventDefault();
+      if (document.activeElement !== documentoInput) {
+        // Cursor fuera del campo: marcamos para descartar PERO seguimos bloqueando teclas
+        descartarRafaga = true;
 
-    if (e.key === "Tab" || e.key === "Enter") {
-      scanBuffer += e.key === "Tab" ? "\t" : "\n";
-    } else if (e.key.length === 1) {
-      scanBuffer += e.key;
+        const t = Date.now();
+        if (t - ultimoAvisoEscaneo > THROTTLE_AVISO_MS) {
+          ultimoAvisoEscaneo = t;
+          console.warn("[Escáner] ⚠️ Cursor no estaba en 'Número de documento'. Lectura descartada.");
+          showToast(
+            '⚠️ Coloca el cursor en "Número de documento" antes de escanear.',
+            "error",
+          );
+        }
+      } else {
+        if (documentoInput.value) documentoInput.value = "";
+      }
     }
-
-    clearTimeout(scanTimer);
-    scanTimer = setTimeout(() => {
-      procesarEscaneo();
-      escaneoEnCurso = false;
-    }, 250);
-
-    return;
   }
 
-  if (e.key === "Tab" || e.key === "Enter") {
-    scanBuffer += e.key === "Tab" ? "\t" : "\n";
-  } else if (e.key.length === 1) {
-    scanBuffer += e.key;
+  // 🛡️ CLAVE: bloqueamos Tab/Enter/todo mientras haya ráfaga,
+  // incluso si la vamos a descartar. Esto evita que el foco salte por el menú.
+  if (rafagaActiva) {
+    e.preventDefault();
   }
 
   clearTimeout(scanTimer);
   scanTimer = setTimeout(() => {
-    scanBuffer = "";
-  }, 250);
+    if (rafagaActiva && !descartarRafaga && keyLog.length >= MIN_TECLAS_ESCANEO) {
+      procesarBuffer(keyLog);
+    }
+    keyLog = [];
+    rafagaActiva = false;
+    descartarRafaga = false;
+  }, PAUSA_FIN_ESCANEO_MS);
 });
 
-function procesarEscaneo() {
-  const buffer = scanBuffer;
-  scanBuffer = "";
-
-  if (!buffer) return;
-
-  console.log("[Escáner] Buffer capturado:", JSON.stringify(buffer));
-
-  // Si el cursor no estaba en el campo correcto, avisamos y descartamos todo
-  if (focoAlIniciarEscaneo !== documentoInput) {
-    console.warn(
-      "[Escáner] Cursor no estaba en el campo de documento. Escaneo descartado.",
-    );
-    showToast(
-      'Por favor, coloca el cursor en "Número de documento" antes de escanear.',
-      "error",
-    );
+function procesarBuffer(log) {
+  const duracion = log[log.length - 1].time - log[0].time;
+  if (duracion > UMBRAL_DURACION_ESCANEO_MS) {
+    console.log(`[Escáner] Ráfaga muy lenta (${duracion.toFixed(0)}ms). Ignorada.`);
     return;
   }
+
+  const buffer = log
+    .map((k) => (k.key === "Tab" ? "\t" : k.key === "Enter" ? "\n" : k.key))
+    .join("");
+
+  console.log(
+    `[Escáner] Ráfaga (${log.length} teclas, ${duracion.toFixed(0)}ms):`,
+    JSON.stringify(buffer),
+  );
 
   if (!buffer.includes("\t")) {
-    if (buffer.length > 3) {
-      console.warn("[Escáner] Formato no reconocido:", buffer);
-      showToast(
-        "No se pudo interpretar la lectura del lector. Intenta de nuevo.",
-        "error",
-      );
-    }
+    console.log("[Escáner] Sin tabs. No es cédula.");
     return;
   }
 
-  const campos = buffer.split("\t").map((c) => c.trim());
-  if (campos.length < 5 || !campos[0]) {
-    console.warn("[Escáner] Lectura incompleta:", campos);
-    showToast(
-      "Lectura de cédula incompleta. Por favor, vuelve a escanear.",
-      "error",
-    );
+  const camposRaw = buffer.split("\t").map((c) => c.trim());
+
+  // Buscar el primer campo numérico de 6-10 dígitos (el documento)
+  const idxDoc = camposRaw.findIndex((c) => /^\d{6,10}$/.test(c));
+  if (idxDoc === -1) {
+    console.warn("[Escáner] No se encontró documento válido:", camposRaw);
+    showToast("No se detectó un documento válido. Reintenta.", "error");
+    return;
+  }
+
+  const campos = camposRaw.slice(idxDoc);
+  if (campos.length < 5) {
+    console.warn("[Escáner] Faltan campos:", campos);
+    showToast("Lectura incompleta. Vuelve a escanear.", "error");
     return;
   }
 
@@ -130,96 +145,46 @@ function procesarEscaneo() {
 
 function procesarCedula(campos) {
   const [documento, apellido1, apellido2, nombre1, nombre2Raw] = campos;
-  const nombre2 = (nombre2Raw || "").replace(/[0-9]+/g, "").trim();
-  const nombreCompleto = [apellido1, apellido2, nombre1, nombre2]
-    .filter(Boolean)
-    .join(" ");
 
-  // Validación: rechaza lecturas con caracteres inválidos (posible error físico del lector)
+  // Normalizamos todo a mayúsculas sin importar el estado de Bloq Mayús
+  const apellido1Up = (apellido1 || "").toUpperCase();
+  const apellido2Up = (apellido2 || "").toUpperCase();
+  const nombre1Up = (nombre1 || "").toUpperCase();
+
+  const nombre2 = (nombre2Raw || "")
+    .replace(/[0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();  // ⬅️ aquí también
+
+  const nombreCompleto = [apellido1Up, apellido2Up, nombre1Up, nombre2]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Validación: acepta mayúsculas después de normalizar
   const documentoValido = /^\d{6,10}$/.test(documento);
-  const nombreValido = /^[A-ZÑ\s]{3,80}$/.test(nombreCompleto);
+  const nombreValido = /^[A-ZÑ\s]{3,80}$/.test(nombreCompleto); // ✅ ahora sí pasa
 
   if (!documentoValido || !nombreValido) {
-    console.warn(
-      "[Escáner] Datos con formato inválido, posible error de lectura:",
-      { documento, nombreCompleto },
-    );
-    showToast(
-      "La lectura parece tener errores. Por favor, vuelve a escanear la cédula.",
-      "error",
-    );
+    console.warn("[Escáner] Formato inválido:", { documento, nombreCompleto });
+    showToast("Lectura con errores. Vuelve a escanear.", "error");
     return;
   }
 
   documentoInput.value = documento.replace(/^0+/, "");
   nombreInput.value = nombreCompleto;
 
-  console.log("[Escáner] Cédula procesada:", { documento, nombreCompleto });
+  console.log("[Escáner] ✅ Cédula procesada:", { documento, nombreCompleto });
   showToast(`Cédula escaneada: ${nombreCompleto}`, "success");
   documentoInput.dispatchEvent(new Event("input"));
 }
 
-function procesarCedulaNueva(lineas) {
-  const [linea1, linea2, linea3] = lineas;
-
-  const documento = linea2
-    .substring(18, 28)
-    .replace(/[<0]+$/, "")
-    .trim();
-
-  const [apellidosRaw, nombresRaw] = linea3.split("<<");
-  const apellidos = (apellidosRaw || "").split("<").filter(Boolean);
-  const nombres = (nombresRaw || "").split("<").filter(Boolean);
-  const nombreCompleto = [...apellidos, ...nombres].join(" ");
-
-  documentoInput.value = documento;
-  nombreInput.value = nombreCompleto;
-
-  console.log("[Escáner] Cédula nueva procesada:", {
-    documento,
-    nombreCompleto,
-  });
-  showToast(`Cédula (nueva) escaneada: ${nombreCompleto}`, "success");
-  documentoInput.dispatchEvent(new Event("input"));
-}
-
+// ── Cámara ──
 let cameraStream = null;
 let capturedPhotoBlob = null;
 
-// ── Conexión con el servidor para recibir datos del lector de cédulas ──
-
-let entryClockInterval = null;
-
-/**
- * Actualiza el reloj del formulario de entrada en tiempo real.
- */
-function startEntryFormClock() {
-  function tick() {
-    const now = new Date();
-    entryTimeDisplay.textContent = now.toLocaleTimeString("es-CO", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
-  }
-  tick();
-  entryClockInterval = setInterval(tick, 1000);
-}
-
-/**
- * Detiene el reloj del formulario.
- */
-function stopEntryFormClock() {
-  if (entryClockInterval) {
-    clearInterval(entryClockInterval);
-    entryClockInterval = null;
-  }
-}
-
-/**
- * Solicita permiso y activa la cámara, mostrando el video en vivo.
- */
 async function startCamera() {
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -232,9 +197,6 @@ async function startCamera() {
   }
 }
 
-/**
- * Apaga la cámara (libera el dispositivo para que otras apps puedan usarla).
- */
 function stopCamera() {
   if (cameraStream) {
     cameraStream.getTracks().forEach((track) => track.stop());
@@ -242,40 +204,28 @@ function stopCamera() {
   }
 }
 
-/**
- * Toma una "foto" del cuadro actual del video, usando el canvas oculto como intermediario.
- */
 function capturePhoto() {
   const width = cameraVideo.videoWidth;
   const height = cameraVideo.videoHeight;
   captureCanvas.width = width;
   captureCanvas.height = height;
-
   const ctx = captureCanvas.getContext("2d");
   ctx.drawImage(cameraVideo, 0, 0, width, height);
-
   captureCanvas.toBlob(
     (blob) => {
       capturedPhotoBlob = blob;
-      const previewUrl = URL.createObjectURL(blob);
-      capturedPhotoPreview.src = previewUrl;
-
-      // Mostrar la foto capturada, ocultar el video en vivo
+      capturedPhotoPreview.src = URL.createObjectURL(blob);
       capturedPhotoPreview.style.display = "block";
       cameraVideo.style.display = "none";
       btnCapturePhoto.style.display = "none";
       btnRetakePhoto.style.display = "inline-flex";
-
-      stopCamera(); // Ya no necesitamos la cámara encendida mientras se ve la foto capturada
+      stopCamera();
     },
     "image/jpeg",
     0.85,
   );
 }
 
-/**
- * Vuelve a activar la cámara para tomar otra foto.
- */
 async function retakePhoto() {
   capturedPhotoBlob = null;
   capturedPhotoPreview.style.display = "none";
@@ -288,15 +238,34 @@ async function retakePhoto() {
 btnCapturePhoto.addEventListener("click", capturePhoto);
 btnRetakePhoto.addEventListener("click", retakePhoto);
 
-/**
- * Auto-completado: cuando el empleado escribe el documento,
- * busca al visitante en la BD y rellena los campos automáticamente.
- */
+// ── Reloj ──
+let entryClockInterval = null;
+
+function startEntryFormClock() {
+  function tick() {
+    entryTimeDisplay.textContent = new Date().toLocaleTimeString("es-CO", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }
+  tick();
+  entryClockInterval = setInterval(tick, 1000);
+}
+
+function stopEntryFormClock() {
+  if (entryClockInterval) {
+    clearInterval(entryClockInterval);
+    entryClockInterval = null;
+  }
+}
+
+// ── Autocompletado ──
 documentoInput.addEventListener("input", () => {
   clearTimeout(lookupTimeout);
   const doc = documentoInput.value.trim();
 
-  // Limpiar banner si el campo está vacío
   if (doc.length < 3) {
     frequentBanner.style.display = "none";
     return;
@@ -308,7 +277,6 @@ documentoInput.addEventListener("input", () => {
       const data = await apiFetch(
         `/visitors/lookup?documento=${encodeURIComponent(doc)}`,
       );
-
       if (data.found && data.visitor) {
         const v = data.visitor;
         nombreInput.value = v.nombre;
@@ -321,7 +289,6 @@ documentoInput.addEventListener("input", () => {
         frequentBanner.style.display = "none";
       }
     } catch (_) {
-      // Silencioso — puede ser que el visitante no exista aún
       frequentBanner.style.display = "none";
     } finally {
       lookupSpinner.style.display = "none";
@@ -329,10 +296,7 @@ documentoInput.addEventListener("input", () => {
   }, 500);
 });
 
-/**
- * Envío del formulario de entrada.
- */
-
+// ── Submit ──
 entryForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -346,7 +310,6 @@ entryForm.addEventListener("submit", async (e) => {
     motivo: motivoTextarea.value.trim(),
   };
 
-  // Validación front-end
   const requiredLabels = {
     documento: "Número de documento",
     nombre: "Nombre completo",
@@ -361,11 +324,8 @@ entryForm.addEventListener("submit", async (e) => {
     }
   }
 
-  // Armar el FormData (texto + foto, si existe)
   const formData = new FormData();
-  Object.entries(payload).forEach(([key, value]) =>
-    formData.append(key, value),
-  );
+  Object.entries(payload).forEach(([key, value]) => formData.append(key, value));
   if (capturedPhotoBlob) {
     formData.append("foto", capturedPhotoBlob, "foto.jpg");
   }
@@ -377,7 +337,7 @@ entryForm.addEventListener("submit", async (e) => {
     const token = localStorage.getItem("coneq_token");
     const res = await fetch("/api/entries", {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }, // Sin Content-Type: el navegador lo pone solo con FormData
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
     const data = await res.json();
@@ -387,10 +347,7 @@ entryForm.addEventListener("submit", async (e) => {
     showToast("✅  Entrada registrada correctamente.", "success");
     clearEntryForm();
 
-    // Si el dashboard está visible, actualizar
-    if (
-      document.getElementById("page-dashboard").classList.contains("active")
-    ) {
+    if (document.getElementById("page-dashboard").classList.contains("active")) {
       loadDashboard();
     }
   } catch (err) {
@@ -401,16 +358,10 @@ entryForm.addEventListener("submit", async (e) => {
   }
 });
 
-/**
- * Limpia todos los campos del formulario.
- */
-
 function clearEntryForm() {
   entryForm.reset();
   frequentBanner.style.display = "none";
   documentoInput.focus();
-
-  // Reiniciar la cámara para la siguiente persona
   capturedPhotoBlob = null;
   capturedPhotoPreview.style.display = "none";
   cameraVideo.style.display = "block";
@@ -419,9 +370,19 @@ function clearEntryForm() {
   startCamera();
 }
 
+// Mantener el foco en el campo de documento cuando se entra a la página
+// (excepto si el usuario está escribiendo en otro campo)
+window.focusDocumentoEntry = function () {
+  const activo = document.activeElement;
+  // Si no hay nada enfocado o está en body, enfocamos documento
+  if (!activo || activo === document.body) {
+    documentoInput.focus();
+  }
+};
+
+
 btnClearEntry.addEventListener("click", clearEntryForm);
 
-// Exponer
 window.startEntryFormClock = startEntryFormClock;
 window.stopEntryFormClock = stopEntryFormClock;
 window.startCamera = startCamera;
