@@ -17,7 +17,6 @@
     "multer": "^2.3.0",
     "mysql2": "^3.9.7",
     "serialport": "^13.0.0",
-    "socket.io": "^4.8.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
