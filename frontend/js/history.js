@@ -69,7 +69,7 @@ function renderHistoryTable(records) {
       ? `<button class="btn btn-danger-ghost btn-sm btn-delete-history" data-id="${r.id}">Eliminar</button>`
       : '';
 
-      const fotoHtml = r.foto
+    const fotoHtml = r.foto
       ? `<img src="/uploads/fotos/${r.foto}" class="history-photo-thumb" data-full="/uploads/fotos/${r.foto}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;cursor:pointer;">`
       : `<span style="color:var(--text-muted);font-size:.78rem;">Sin foto</span>`;
 
@@ -114,7 +114,7 @@ function showPhotoModal(url) {
  */
 async function handleDeleteHistory(btn) {
   const id = btn.dataset.id;
-  const confirmado = confirm('¿Seguro que quieres eliminar este registro del historial? Esta acción no se puede deshacer.');
+  const confirmado = await showConfirm('¿Seguro que quieres eliminar este registro del historial? Esta acción no se puede deshacer.');
   if (!confirmado) return;
 
   btn.disabled = true;
@@ -220,7 +220,7 @@ async function showEvacuationList() {
 
 function renderEvacuationModal(records, generatedAt) {
   const timestampEl = document.getElementById('evacuationTimestamp');
-  const tbody       = document.getElementById('evacuationTableBody');
+  const tbody = document.getElementById('evacuationTableBody');
 
   const fecha = new Date(generatedAt);
   const fechaTexto = fecha.toLocaleString('es-CO', {

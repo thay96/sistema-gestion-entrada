@@ -95,7 +95,7 @@ document.getElementById('passwordForm')?.addEventListener('submit', async (e) =>
 });
 
 async function deactivateUser(id) {
-  if (!confirm('¿Desactivar este usuario?')) return;
+    if (!(await showConfirm('¿Seguro que quieres desactivar este usuario? No podrá iniciar sesión hasta que lo reactives.', 'Desactivar'))) return;
   setLoading(true);
   try {
     await apiFetch(`/users/${id}`, { method:'DELETE' });

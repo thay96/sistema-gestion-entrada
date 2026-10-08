@@ -67,6 +67,39 @@ function startClock() {
   tick(); setInterval(tick, 1000);
 }
 
+/**
+ * Muestra un modal de confirmación con estilo propio del sistema,
+ * en vez del confirm() genérico del navegador.
+ * @param {string} mensaje - Pregunta a mostrar
+ * @param {string} tituloBoton - Texto del botón de aceptar (por defecto "Eliminar")
+ * @returns {Promise<boolean>} true si el usuario confirmó, false si canceló
+ */
+function showConfirm(mensaje, tituloBoton = 'Eliminar') {
+  return new Promise((resolve) => {
+    const modal        = document.getElementById('modalConfirm');
+    const messageEl     = document.getElementById('confirmMessage');
+    const acceptBtn      = document.getElementById('confirmAcceptBtn');
+    const cancelBtn       = document.getElementById('confirmCancelBtn');
+
+    messageEl.textContent = mensaje;
+    acceptBtn.textContent = tituloBoton;
+    modal.classList.remove('hidden');
+
+    function limpiar(resultado) {
+      modal.classList.add('hidden');
+      acceptBtn.removeEventListener('click', onAccept);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(resultado);
+    }
+    function onAccept() { limpiar(true); }
+    function onCancel()  { limpiar(false); }
+
+    acceptBtn.addEventListener('click', onAccept);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
 window.apiFetch=apiFetch; window.setToken=setToken; window.getUser=getUser; window.setUser=setUser;
 window.logout=logout; window.showToast=showToast; window.formatDateTime=formatDateTime;
 window.formatTime=formatTime; window.setLoading=setLoading; window.escapeHtml=escapeHtml; window.startClock=startClock;
+window.showConfirm=showConfirm;
