@@ -263,3 +263,7 @@ textarea{resize:vertical;min-height:80px}
   .form-grid{grid-template-columns:1fr}
   .stats-grid,.stats-grid-sm{grid-template-columns:1fr 1fr;gap:10px}
 }
+
+.radio-group{display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:10px 0}
+.radio-option{display:inline-flex;align-items:center;gap:7px;font-size:.9rem;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-primary);cursor:pointer}
+.radio-option input[type=radio]{width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}

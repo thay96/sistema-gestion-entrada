@@ -25,6 +25,7 @@ const btnCapturePhoto = document.getElementById("btnCapturePhoto");
 const btnRetakePhoto = document.getElementById("btnRetakePhoto");
 const cameraStatus = document.getElementById("cameraStatus");
 const captureCanvas = document.getElementById("captureCanvas");
+const seguridadSocialInput = document.getElementById("entrySeguridadSocial");
 
 // ── Detección de escaneo Zebra DS46 ──
 const MODIFIER_KEYS = new Set([
@@ -308,6 +309,10 @@ entryForm.addEventListener("submit", async (e) => {
     correo: correoInput.value.trim(),
     telefono: telefonoInput.value.trim(),
     motivo: motivoTextarea.value.trim(),
+        seguridad_social_nombre: seguridadSocialInput.value.trim(),
+    soporte_seguridad_social: (document.querySelector('input[name="soporteSS"]:checked') || {}).value || "",
+    notificacion_riesgo: (document.querySelector('input[name="notificacionRiesgo"]:checked') || {}).value || "",
+    autoriza_datos: (document.querySelector('input[name="autorizaDatos"]:checked') || {}).value || "",
   };
 
   const requiredLabels = {
@@ -316,6 +321,9 @@ entryForm.addEventListener("submit", async (e) => {
     empresa: "Empresa",
     tipo_persona: "Tipo de persona",
     correo: "Correo electrónico",
+        soporte_seguridad_social: "Presenta soporte de seguridad social",
+    notificacion_riesgo: "Notificación de riesgo y punto de encuentro",
+    autoriza_datos: "Autoriza el tratamiento de datos personales",
   };
   for (const [key, label] of Object.entries(requiredLabels)) {
     if (!payload[key]) {

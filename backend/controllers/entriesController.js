@@ -21,6 +21,10 @@ const entriesController = {
         motivo,
         telefono,
         correo,
+        seguridad_social_nombre,
+        soporte_seguridad_social,
+        notificacion_riesgo,
+        autoriza_datos,
       } = req.body;
 
       const requiredFields = {
@@ -39,6 +43,17 @@ const entriesController = {
               message: `El campo "${field}" es obligatorio.`,
             });
         }
+      }
+      const SI_NO = ["Si", "No"];
+      const SI_NO_NA = ["Si", "No", "N/A"];
+      if (!SI_NO_NA.includes(soporte_seguridad_social)) {
+        return res.status(400).json({ success: false, message: 'Debe indicar si presenta soporte de seguridad social.' });
+      }
+      if (!SI_NO.includes(notificacion_riesgo)) {
+        return res.status(400).json({ success: false, message: 'Debe indicar si se hizo la notificación de riesgo y punto de encuentro.' });
+      }
+      if (!SI_NO.includes(autoriza_datos)) {
+        return res.status(400).json({ success: false, message: 'Debe indicar si autoriza el tratamiento de datos personales.' });
       }
 
       // 1. Buscar si ya existe un visitante con este documento, SIN modificar nada todavía
@@ -69,6 +84,10 @@ const entriesController = {
         tipo_persona: tipo_persona.trim(),
         motivo: motivo ? motivo.trim() : null,
         foto,
+        seguridad_social_nombre: seguridad_social_nombre ? seguridad_social_nombre.trim() : null,
+        soporte_seguridad_social,
+        notificacion_riesgo,
+        autoriza_datos,
       });
 
       return res
@@ -178,6 +197,10 @@ const entriesController = {
         Empresa: r.empresa,
         Tipo: r.tipo_persona,
         Motivo: r.motivo || "",
+        "ARL / EPS": r.seguridad_social_nombre || "",
+        "Soporte seg. social": r.soporte_seguridad_social || "",
+        "Notificación riesgo y punto de encuentro": r.notificacion_riesgo || "",
+        "Autoriza datos personales": r.autoriza_datos || "",
         "Hora Entrada": r.hora_entrada
           ? moment(r.hora_entrada).format("DD/MM/YYYY HH:mm:ss")
           : "",

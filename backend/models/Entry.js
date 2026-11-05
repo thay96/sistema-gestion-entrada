@@ -14,11 +14,20 @@ const Entry = {
    */
 
   async create(data) {
-    const { visitante_id, tipo_persona, motivo, foto } = data;
+    const {
+      visitante_id, tipo_persona, motivo, foto,
+      seguridad_social_nombre, soporte_seguridad_social, notificacion_riesgo, autoriza_datos,
+    } = data;
     const [result] = await pool.execute(
-      `INSERT INTO ingresos (visitante_id, tipo_persona, motivo, foto)
-       VALUES (?, ?, ?, ?)`,
-      [visitante_id, tipo_persona, motivo || null, foto || null]
+      `INSERT INTO ingresos
+         (visitante_id, tipo_persona, motivo, foto,
+          seguridad_social_nombre, soporte_seguridad_social, notificacion_riesgo, autoriza_datos)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        visitante_id, tipo_persona, motivo || null, foto || null,
+        seguridad_social_nombre || null, soporte_seguridad_social,
+        notificacion_riesgo, autoriza_datos,
+      ]
     );
     return result.insertId;
   },
@@ -149,7 +158,11 @@ const Entry = {
         i.hora_entrada,
         i.hora_salida,
         i.estado,
-        i.foto
+        i.foto,
+        i.seguridad_social_nombre,
+        i.soporte_seguridad_social,
+        i.notificacion_riesgo,
+        i.autoriza_datos
       FROM ingresos i
       INNER JOIN visitantes v ON v.id = i.visitante_id
       WHERE 1=1
