@@ -47,27 +47,21 @@ const Visitor = {
    * @returns {Object} { id, isNew }
    */
   async upsert(data) {
-    const { documento, nombre, empresa, tipo_persona, telefono, correo } = data;
-
-    // Verificar si ya existe
+    const { documento, nombre, empresa, tipo_persona, telefono } = data;
     const existing = await this.findByDocumento(documento);
-
     if (existing) {
-      // Actualizar datos en caso de cambio
       await pool.execute(
         `UPDATE visitantes
-         SET nombre = ?, empresa = ?, tipo_persona = ?, telefono = ?, correo = ?, actualizado_en = NOW()
+         SET nombre = ?, empresa = ?, tipo_persona = ?, telefono = ?, actualizado_en = NOW()
          WHERE id = ?`,
-        [nombre, empresa, tipo_persona, telefono || null, correo, existing.id]
+        [nombre, empresa, tipo_persona, telefono || null, existing.id]
       );
       return { id: existing.id, isNew: false };
     }
-
-    // Crear nuevo visitante
     const [result] = await pool.execute(
-      `INSERT INTO visitantes (documento, nombre, empresa, tipo_persona, telefono, correo)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [documento, nombre, empresa, tipo_persona, telefono || null, correo]
+      `INSERT INTO visitantes (documento, nombre, empresa, tipo_persona, telefono)
+       VALUES (?, ?, ?, ?, ?)`,
+      [documento, nombre, empresa, tipo_persona, telefono || null]
     );
     return { id: result.insertId, isNew: true };
   },

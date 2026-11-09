@@ -11,7 +11,8 @@ const documentoInput = document.getElementById("entryDocumento");
 const nombreInput = document.getElementById("entryNombre");
 const empresaInput = document.getElementById("entryEmpresa");
 const tipoPersonaSelect = document.getElementById("entryTipoPersona");
-const correoInput = document.getElementById("entryCorreo");
+const arlSelect = document.getElementById("entryArl");
+const epsSelect = document.getElementById("entryEps");
 const telefonoInput = document.getElementById("entryTelefono");
 const motivoTextarea = document.getElementById("entryMotivo");
 const frequentBanner = document.getElementById("frequentVisitorBanner");
@@ -25,7 +26,7 @@ const btnCapturePhoto = document.getElementById("btnCapturePhoto");
 const btnRetakePhoto = document.getElementById("btnRetakePhoto");
 const cameraStatus = document.getElementById("cameraStatus");
 const captureCanvas = document.getElementById("captureCanvas");
-const seguridadSocialInput = document.getElementById("entrySeguridadSocial");
+
 
 // ── Detección de escaneo Zebra DS46 ──
 const MODIFIER_KEYS = new Set([
@@ -283,7 +284,6 @@ documentoInput.addEventListener("input", () => {
         nombreInput.value = v.nombre;
         empresaInput.value = v.empresa;
         tipoPersonaSelect.value = v.tipo_persona;
-        correoInput.value = v.correo;
         telefonoInput.value = v.telefono || "";
         frequentBanner.style.display = "flex";
       } else {
@@ -306,10 +306,10 @@ entryForm.addEventListener("submit", async (e) => {
     nombre: nombreInput.value.trim(),
     empresa: empresaInput.value.trim(),
     tipo_persona: tipoPersonaSelect.value,
-    correo: correoInput.value.trim(),
     telefono: telefonoInput.value.trim(),
     motivo: motivoTextarea.value.trim(),
-        seguridad_social_nombre: seguridadSocialInput.value.trim(),
+    arl: arlSelect.value,
+    eps: epsSelect.value,
     soporte_seguridad_social: (document.querySelector('input[name="soporteSS"]:checked') || {}).value || "",
     notificacion_riesgo: (document.querySelector('input[name="notificacionRiesgo"]:checked') || {}).value || "",
     autoriza_datos: (document.querySelector('input[name="autorizaDatos"]:checked') || {}).value || "",
@@ -320,8 +320,7 @@ entryForm.addEventListener("submit", async (e) => {
     nombre: "Nombre completo",
     empresa: "Empresa",
     tipo_persona: "Tipo de persona",
-    correo: "Correo electrónico",
-        soporte_seguridad_social: "Presenta soporte de seguridad social",
+    soporte_seguridad_social: "Presenta soporte de seguridad social",
     notificacion_riesgo: "Notificación de riesgo y punto de encuentro",
     autoriza_datos: "Autoriza el tratamiento de datos personales",
   };

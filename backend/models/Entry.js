@@ -16,16 +16,16 @@ const Entry = {
   async create(data) {
     const {
       visitante_id, tipo_persona, motivo, foto,
-      seguridad_social_nombre, soporte_seguridad_social, notificacion_riesgo, autoriza_datos,
+      arl, eps, soporte_seguridad_social, notificacion_riesgo, autoriza_datos,
     } = data;
     const [result] = await pool.execute(
       `INSERT INTO ingresos
          (visitante_id, tipo_persona, motivo, foto,
-          seguridad_social_nombre, soporte_seguridad_social, notificacion_riesgo, autoriza_datos)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          arl, eps, soporte_seguridad_social, notificacion_riesgo, autoriza_datos)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         visitante_id, tipo_persona, motivo || null, foto || null,
-        seguridad_social_nombre || null, soporte_seguridad_social,
+        arl || null, eps || null, soporte_seguridad_social,
         notificacion_riesgo, autoriza_datos,
       ]
     );
@@ -159,7 +159,8 @@ const Entry = {
         i.hora_salida,
         i.estado,
         i.foto,
-        i.seguridad_social_nombre,
+        i.arl,
+        i.eps,
         i.soporte_seguridad_social,
         i.notificacion_riesgo,
         i.autoriza_datos

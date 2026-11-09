@@ -20,8 +20,7 @@ const entriesController = {
         tipo_persona,
         motivo,
         telefono,
-        correo,
-        seguridad_social_nombre,
+        arl, eps,
         soporte_seguridad_social,
         notificacion_riesgo,
         autoriza_datos,
@@ -32,7 +31,6 @@ const entriesController = {
         documento,
         empresa,
         tipo_persona,
-        correo,
       };
       for (const [field, value] of Object.entries(requiredFields)) {
         if (!value || !value.toString().trim()) {
@@ -73,7 +71,7 @@ const entriesController = {
       // 3. Solo si NO está dentro, se actualizan/crean los datos del visitante
       const { id: visitante_id } = await Visitor.upsert({
         nombre: nombre.trim(), documento: documento.trim(), empresa: empresa.trim(),
-        tipo_persona: tipo_persona.trim(), telefono: telefono ? telefono.trim() : null, correo: correo.trim(),
+        tipo_persona: tipo_persona.trim(), telefono: telefono ? telefono.trim() : null(),
       });
 
       // 4. Y se registra la nueva entrada
@@ -84,7 +82,8 @@ const entriesController = {
         tipo_persona: tipo_persona.trim(),
         motivo: motivo ? motivo.trim() : null,
         foto,
-        seguridad_social_nombre: seguridad_social_nombre ? seguridad_social_nombre.trim() : null,
+        arl: arl ? arl.trim().slice(0, 100) : null,
+        eps: eps ? eps.trim().slice(0, 100) : null,
         soporte_seguridad_social,
         notificacion_riesgo,
         autoriza_datos,
@@ -197,7 +196,9 @@ const entriesController = {
         Empresa: r.empresa,
         Tipo: r.tipo_persona,
         Motivo: r.motivo || "",
-        "ARL / EPS": r.seguridad_social_nombre || "",
+        ARL: r.arl || "",
+        EPS: r.eps || "",
+        "Soporte seg. social": r.soporte_seguridad_social || "",
         "Soporte seg. social": r.soporte_seguridad_social || "",
         "Notificación riesgo y punto de encuentro": r.notificacion_riesgo || "",
         "Autoriza datos personales": r.autoriza_datos || "",

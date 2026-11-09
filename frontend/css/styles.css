@@ -133,7 +133,7 @@ input,select,textarea{font-family:var(--font)}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .form-group{display:flex;flex-direction:column;gap:6px}
 .form-group--full{grid-column:1/-1}
-label{font-size:.75rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em}
+label{font-size:.75rem;font-weight:700;color:var(--text-primary);text-transform:uppercase;letter-spacing:.04em}
 .required{color:var(--red)}.optional{color:var(--text-muted);font-weight:400;text-transform:none;font-size:.72rem}
 .input-wrapper{position:relative}
 .input-wrapper input{padding-right:36px}

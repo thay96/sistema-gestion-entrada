@@ -283,8 +283,25 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="entryCorreo">Correo electrónico <span class="required">*</span></label>
-                                <input type="email" id="entryCorreo" placeholder="correo@empresa.com" required />
+                                <label for="entryArl">Seguridad social: ARL</label>
+                                <div class="select-wrapper">
+                                    <select id="entryArl"></select>
+                                    <svg class="select-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="entryEps">Seguridad social: EPS</label>
+                                <div class="select-wrapper">
+                                    <select id="entryEps"></select>
+                                    <svg class="select-arrow" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9" />
+                                    </svg>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -297,14 +314,7 @@
                                         class="optional">(opcional)</span></label>
                                 <textarea id="entryMotivo" rows="3"
                                     placeholder="Describa brevemente el motivo..."></textarea>
-                            </div>
-
-                            <div class="form-group form-group--full">
-                                <label for="entrySeguridadSocial">Seguridad social vigente (ARL / EPS) <span
-                                        class="optional">(nombres)</span></label>
-                                <input type="text" id="entrySeguridadSocial" placeholder="Ej: Sura ARL / Sanitas EPS"
-                                    autocomplete="off" />
-                            </div>
+                            </div>                      
 
                             <div class="form-group">
                                 <label>Presenta soporte de seguridad social <span class="required">*</span></label>
@@ -569,7 +579,7 @@
                             <li><strong>Visitante nuevo:</strong> Complete todos los campos obligatorios en "Registrar
                                 Entrada". El sistema guardará los datos para futuras visitas.</li>
                             <li><strong>Visitante frecuente:</strong> Solo ingrese el documento. El sistema completará
-                                automáticamente nombre, empresa, teléfono, correo y tipo.</li>
+                                automáticamente nombre, empresa, teléfono, </li>
                             <li><strong>Registrar salida:</strong> Busque por documento o nombre. Seleccione el
                                 visitante y presione "Registrar Salida".</li>
                             <li><strong>Historial:</strong> Filtre por nombre, documento, empresa o fechas. Exporte a
@@ -685,7 +695,7 @@
                 </div>
             </div>
 
-    </main>
+        </main>
     </div> <!-- cierre del contenedor app / body wrapper -->
 
     <!-- TOAST + LOADING -->
@@ -700,6 +710,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
 
     <script src="js/utils.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/catalogos.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/registerEntry.js"></script>
     <script src="js/registerExit.js"></script>
